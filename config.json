@@ -1,0 +1,8 @@
+{
+  "scriptActivo": true,
+  "modoMantenimiento": false,
+  "mensajeDia": "Bienvenido al Server Hopper!",
+  "bans": [],
+  "whitelist": {"activo": false, "usuarios": []},
+  "admins": []
+}
