@@ -1,0 +1,98 @@
+-- autofarm (michaelarsx) | Auto Farm St. Patricks 2026
+local remote = game:GetService("ReplicatedStorage"):WaitForChild("StPatricks2026"):WaitForChild("RemoteEvent")
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+local StarterGui = game:GetService("StarterGui")
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local VELOCIDAD = 0.033
+local LOBBY_POS = Vector3.new(-300.18, 241.67, 2.10)
+local recolectado = 0
+
+-- GUI
+local screen = Instance.new("ScreenGui", player.PlayerGui)
+screen.ResetOnSpawn = false
+local frame = Instance.new("Frame", screen)
+frame.Size = UDim2.new(0, 220, 0, 60)
+frame.Position = UDim2.new(0, 10, 0.5, 0)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+local label = Instance.new("TextLabel", frame)
+label.Size = UDim2.new(1, 0, 1, 0)
+label.BackgroundTransparency = 1
+label.TextColor3 = Color3.fromRGB(0, 255, 100)
+label.TextScaled = true
+label.Font = Enum.Font.GothamBold
+label.Text = "autofarm (michaelarsx)\nRecolectado: 0"
+
+local function actualizarGUI(status)
+    label.Text = "autofarm (michaelarsx)\n" .. (status or ("Recolectado: " .. recolectado))
+end
+
+local function notificar(titulo, mensaje)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = titulo,
+            Text = mensaje,
+            Duration = 4
+        })
+    end)
+end
+
+local function irAlLobby()
+    if hrp then
+        hrp.CFrame = CFrame.new(LOBBY_POS)
+    end
+end
+
+local function serverHop()
+    actualizarGUI("Buscando servidor...")
+    notificar("autofarm (michaelarsx)", "Buscando nuevo servidor...")
+    local ok, result = pcall(function()
+        return HttpService:JSONDecode(
+            game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")
+        )
+    end)
+    if ok and result and result.data then
+        for _, server in pairs(result.data) do
+            if server.id ~= game.JobId and server.playing < server.maxPlayers then
+                notificar("autofarm (michaelarsx)", "Server hop exitoso! Recolectado: " .. recolectado)
+                TeleportService:TeleportToPlaceInstance(game.PlaceId, server.id, player)
+                return
+            end
+        end
+    end
+    notificar("autofarm (michaelarsx)", "Fallback rejoin...")
+    TeleportService:Teleport(game.PlaceId, player)
+end
+
+player.CharacterAdded:Connect(function(char)
+    character = char
+    hrp = char:WaitForChild("HumanoidRootPart")
+    wait(2)
+    irAlLobby()
+end)
+
+-- Server hop cada 60 segundos
+task.spawn(function()
+    while true do
+        wait(60)
+        serverHop()
+    end
+end)
+
+wait(3)
+irAlLobby()
+
+-- Loop recolectar
+while true do
+    pcall(function()
+        remote:FireServer("collect")
+        recolectado = recolectado + 1
+        actualizarGUI()
+    end)
+    wait(VELOCIDAD)
+end
