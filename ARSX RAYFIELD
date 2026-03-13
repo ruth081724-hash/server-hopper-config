@@ -1,0 +1,360 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "ARSX X RAYFIELD",
+   LoadingTitle = "ARSX PROJECT",
+   LoadingSubtitle = "Cargando.....",
+   Theme = "Dark",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = "ARSXRayfieldV2",
+      FileName = "ARSXRAYFIELD"
+   },
+   Discord = {
+      Enabled = false,
+      Invite = "https://discord.gg/VrXzBvmHvk",
+      RememberJoins = false
+   },
+   KeySystem = false,
+   KeySettings = {
+      Title = "ARSX X RAYFIELD",
+      Subtitle = "Sistema de Clave",
+      Note = "Ingresa tu clave para acceder",
+      FileName = "ARSX",
+      SaveKey = true,
+      GrabKeyFromSite = false,
+      Key = {"NYAWIT"}
+   }
+})
+
+-- PESTAÑAS
+local MovementTab = Window:CreateTab("Movimiento", "plane")
+local CombatTab   = Window:CreateTab("Combate", "sword")
+local VisualTab   = Window:CreateTab("Visual", "eye")
+local EmoteTab    = Window:CreateTab("Emote", "smile")
+local HitboxTab   = Window:CreateTab("Hitbox", "target")
+local LimbsTab    = Window:CreateTab("Extremidades", "scale-3d")
+local ESPTab      = Window:CreateTab("ESP Sense", "crosshair")
+
+-- SERVICIOS
+local Players     = game:GetService("Players")
+local RunService  = game:GetService("RunService")
+local CoreGui     = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+local LP          = LocalPlayer
+
+-- MOVIMIENTO: VOLAR + NOCLIP + BOTONES GUI
+
+local FLY_SPEED = 50
+local flying = false
+local noclip = false
+local bodyVelocity, bodyGyro = nil, nil
+
+if CoreGui:FindFirstChild("FlyAndroid") then CoreGui.FlyAndroid:Destroy() end
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "FlyAndroid"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = CoreGui
+screenGui.Enabled = false
+
+local flyBtn = Instance.new("TextButton", screenGui)
+flyBtn.Size = UDim2.new(0,80,0,80)
+flyBtn.Position = UDim2.new(0.85,0,0.7,0)
+flyBtn.BackgroundColor3 = Color3.fromRGB(0,150,255)
+flyBtn.Text = "VOLAR\nOFF"
+flyBtn.TextColor3 = Color3.new(1,1,1)
+flyBtn.TextScaled = true
+flyBtn.Font = Enum.Font.SourceSansBold
+
+local noclipBtn = Instance.new("TextButton", screenGui)
+noclipBtn.Size = UDim2.new(0,60,0,60)
+noclipBtn.Position = UDim2.new(0.85,0,0.55,0)
+noclipBtn.BackgroundColor3 = Color3.fromRGB(255,50,50)
+noclipBtn.Text = "NOCLIP\nOFF"
+noclipBtn.TextColor3 = Color3.new(1,1,1)
+noclipBtn.TextScaled = true
+noclipBtn.Font = Enum.Font.SourceSansBold
+
+local upBtn = Instance.new("TextButton", screenGui)
+upBtn.Size = UDim2.new(0,60,0,60)
+upBtn.Position = UDim2.new(0.7,0,0.7,0)
+upBtn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+upBtn.Text = "↑"
+upBtn.TextColor3 = Color3.new(1,1,1)
+upBtn.TextSize = 40
+
+local downBtn = Instance.new("TextButton", screenGui)
+downBtn.Size = UDim2.new(0,60,0,60)
+downBtn.Position = UDim2.new(0.7,0,0.85,0)
+downBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+downBtn.Text = "↓"
+downBtn.TextColor3 = Color3.new(1,1,1)
+downBtn.TextSize = 40
+
+local function startFly()
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    if bodyVelocity then bodyVelocity:Destroy() end
+    if bodyGyro then bodyGyro:Destroy() end
+    bodyVelocity = Instance.new("BodyVelocity", hrp)
+    bodyVelocity.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
+    bodyVelocity.Velocity = Vector3.new()
+    bodyGyro = Instance.new("BodyGyro", hrp)
+    bodyGyro.MaxTorque = Vector3.new(math.huge,math.huge,math.huge)
+    bodyGyro.P = 10000
+    flying = true
+    RunService:BindToRenderStep("FlyAndroid", Enum.RenderPriority.Input.Value, function()
+        if not flying then return end
+        local cam = workspace.CurrentCamera
+        bodyVelocity.Velocity = cam.CFrame.LookVector * FLY_SPEED * 0.5
+        bodyGyro.CFrame = cam.CFrame
+    end)
+end
+
+local function stopFly()
+    flying = false
+    RunService:UnbindFromRenderStep("FlyAndroid")
+    if bodyVelocity then bodyVelocity:Destroy() end
+    if bodyGyro then bodyGyro:Destroy() end
+    bodyVelocity = nil
+    bodyGyro = nil
+end
+
+flyBtn.MouseButton1Click:Connect(function()
+    if flying then
+        stopFly()
+        flyBtn.Text = "VOLAR\nOFF"
+        flyBtn.BackgroundColor3 = Color3.fromRGB(0,150,255)
+    else
+        startFly()
+        flyBtn.Text = "VOLAR\nON"
+        flyBtn.BackgroundColor3 = Color3.fromRGB(0,255,0)
+    end
+end)
+
+noclipBtn.MouseButton1Click:Connect(function()
+    noclip = not noclip
+    noclipBtn.Text = noclip and "NOCLIP\nON" or "NOCLIP\nOFF"
+    noclipBtn.BackgroundColor3 = noclip and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,50,50)
+end)
+
+local goingUp, goingDown = false, false
+upBtn.InputBegan:Connect(function() goingUp = true end)
+upBtn.InputEnded:Connect(function() goingUp = false end)
+downBtn.InputBegan:Connect(function() goingDown = true end)
+downBtn.InputEnded:Connect(function() goingDown = false end)
+
+RunService:BindToRenderStep("ArribaAbajo", Enum.RenderPriority.Last.Value, function()
+    if not flying or not bodyVelocity then return end
+    local vel = bodyVelocity.Velocity
+    if goingUp then vel += Vector3.new(0,FLY_SPEED,0) end
+    if goingDown then vel -= Vector3.new(0,FLY_SPEED,0) end
+    bodyVelocity.Velocity = vel
+end)
+
+RunService:BindToRenderStep("Noclip", Enum.RenderPriority.Last.Value, function()
+    if not noclip then return end
+    local char = LocalPlayer.Character
+    if char then
+        for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
+
+MovementTab:CreateSection("Controles de Vuelo")
+MovementTab:CreateToggle({Name = "Mostrar GUI de Vuelo", CurrentValue = false, Callback = function(v) screenGui.Enabled = v end})
+MovementTab:CreateToggle({Name = "Volar", CurrentValue = false, Callback = function(v) if v then startFly() else stopFly() end flyBtn.Text = v and "VOLAR\nON" or "VOLAR\nOFF" flyBtn.BackgroundColor3 = v and Color3.fromRGB(0,255,0) or Color3.fromRGB(0,150,255) end})
+MovementTab:CreateToggle({Name = "Noclip", CurrentValue = false, Callback = function(v) noclip = v noclipBtn.Text = v and "NOCLIP\nON" or "NOCLIP\nOFF" noclipBtn.BackgroundColor3 = v and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,50,50) end})
+MovementTab:CreateSlider({Name = "Velocidad de Vuelo", Range = {16,200}, Increment = 1, CurrentValue = 50, Callback = function(v) FLY_SPEED = v end})
+
+MovementTab:CreateSection("Invisible")
+MovementTab:CreateButton({Name = "Cargar Invisible", Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Invisible-script-20557"))() Rayfield:Notify({Title="Invisible",Content="Cargado",Duration=3}) end})
+MovementTab:CreateToggle({Name = "Auto Invisible", CurrentValue = false, Callback = function(v) if v then loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Invisible-script-20557"))() end end})
+
+-- COMBATE
+
+CombatTab:CreateSection("Kill Aura")
+
+local KA_Enabled = false
+local KA_Range = 15
+local KA_Damage = 25
+local KA_Delay = 0.15
+local KA_TeamCheck = true
+
+CombatTab:CreateToggle({Name = "Activar Kill Aura", CurrentValue = false, Callback = function(v) KA_Enabled = v end})
+CombatTab:CreateToggle({Name = "Verificar Equipo", CurrentValue = true, Callback = function(v) KA_TeamCheck = v end})
+CombatTab:CreateSlider({Name = "Rango", Range = {5,50}, Increment = 1, CurrentValue = 15, Callback = function(v) KA_Range = v end})
+CombatTab:CreateSlider({Name = "Daño", Range = {10,100}, Increment = 5, CurrentValue = 25, Callback = function(v) KA_Damage = v end})
+CombatTab:CreateSlider({Name = "Retraso", Range = {0.05,0.8}, Increment = 0.05, CurrentValue = 0.15, Callback = function(v) KA_Delay = v end})
+
+spawn(function()
+    while true do
+        task.wait(KA_Delay)
+        if not KA_Enabled then continue end
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then continue end
+        local root = char.HumanoidRootPart
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr == LocalPlayer then continue end
+            if KA_TeamCheck and plr.Team == LocalPlayer.Team then continue end
+            local tchar = plr.Character
+            if tchar and tchar:FindFirstChild("HumanoidRootPart") then
+                local thrp = tchar.HumanoidRootPart
+                local hum = tchar:FindFirstChildOfClass("Humanoid")
+                if hum and hum.Health > 0 then
+                    if (root.Position - thrp.Position).Magnitude <= KA_Range then
+                        hum:TakeDamage(KA_Damage)
+                    end
+                end
+            end
+        end
+    end
+end)
+
+CombatTab:CreateSection("Scripts Externos")
+CombatTab:CreateButton({Name = "Hitbox Externo", Callback = function() loadstring(game:HttpGet("https://pastefy.app/ItfO0tdg/raw"))() Rayfield:Notify({Title="Hitbox Ext",Content="Cargado",Duration=3}) end})
+CombatTab:CreateButton({Name = "Modo Dios", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/mascaracathub/Test-Script/refs/heads/main/obfuscated_script-1765900058766.lua.txt"))() Rayfield:Notify({Title="Modo Dios",Content="Cargado",Duration=3}) end})
+CombatTab:CreateButton({Name = "Suttann Aim Lock", Callback = function() loadstring(game:HttpGet("https://raw.githubusercontent.com/kyleepep/Scriptbro/refs/heads/main/SuttannHubV3"))() Rayfield:Notify({Title="Aim Lock",Content="Cargado",Duration=3}) end})
+
+-- HITBOX EXPANDER
+
+_G.HitboxEnabled = false
+_G.HitboxSize = 25
+_G.HitboxTransparency = 0.5
+_G.HitboxTeamCheck = false
+
+local function ProcessHitbox()
+    if not _G.HitboxEnabled then return end
+    for _, v in pairs(Players:GetPlayers()) do
+        if v == LP or not v.Character or not v.Character:FindFirstChild("Head") then continue end
+        if _G.HitboxTeamCheck and v.Team == LP.Team then continue end
+        local Head = v.Character.Head
+        local Hum = v.Character:FindFirstChildOfClass("Humanoid")
+        if Hum and Hum.Health > 0 then
+            Head.Size = Vector3.new(_G.HitboxSize,_G.HitboxSize,_G.HitboxSize)
+            Head.Transparency = _G.HitboxTransparency
+            Head.CanCollide = false
+            Head.Massless = true
+        else
+            Head.Size = Vector3.new(1,1,1)
+            Head.Transparency = 0
+        end
+    end
+end
+
+RunService.RenderStepped:Connect(ProcessHitbox)
+
+HitboxTab:CreateSection("Expansor de Hitbox")
+HitboxTab:CreateToggle({Name = "Activar", CurrentValue = false, Callback = function(v) _G.HitboxEnabled = v if not v then for _,p in pairs(Players:GetPlayers()) do local h = p.Character and p.Character:FindFirstChild("Head") if h then h.Size = Vector3.new(1,1,1) h.Transparency = 0 end end end end})
+HitboxTab:CreateToggle({Name = "Verificar Equipo", CurrentValue = false, Callback = function(v) _G.HitboxTeamCheck = v end})
+HitboxTab:CreateSlider({Name = "Tamaño", Range = {1,50}, Increment = 1, CurrentValue = 25, Callback = function(v) _G.HitboxSize = v end})
+HitboxTab:CreateSlider({Name = "Transparencia", Range = {0,1}, Increment = 0.1, CurrentValue = 0.5, Callback = function(v) _G.HitboxTransparency = v end})
+
+-- EXTREMIDADES
+
+getgenv().le = getgenv().le or loadstring(game:HttpGet('https://raw.githubusercontent.com/AAPVdev/scripts/refs/heads/main/LimbExtender.lua'))()
+local LimbExtender = getgenv().le
+local le = LimbExtender({LISTEN_FOR_INPUT = false, USE_HIGHLIGHT = false})
+
+LimbsTab:CreateSection("Controles de Extremidades")
+
+local ModifyLimbsToggle = LimbsTab:CreateToggle({
+    Name = "Modificar Extremidades (ON/OFF Global)",
+    CurrentValue = false,
+    Callback = function(v) le:Toggle(v) end
+})
+
+local limbDropdown
+local currentLimbs = {}
+
+local function refreshLimbsDropdown()
+    currentLimbs = {}
+    local char = LocalPlayer.Character
+    if char then
+        for _, part in ipairs(char:GetChildren()) do
+            if part:IsA("BasePart") and not table.find(currentLimbs, part.Name) then
+                table.insert(currentLimbs, part.Name)
+            end
+        end
+        table.sort(currentLimbs)
+    end
+    if limbDropdown then
+        limbDropdown:Refresh(currentLimbs, true)
+    end
+end
+
+limbDropdown = LimbsTab:CreateDropdown({
+    Name = "Extremidad objetivo (Selecciona cuál extender)",
+    Options = currentLimbs,
+    CurrentOption = {le:Get("TARGET_LIMB") or "Head"},
+    MultipleOptions = false,
+    Callback = function(opt)
+        le:Set("TARGET_LIMB", opt[1])
+        Rayfield:Notify({Title="Extremidad Actualizada", Content="Objetivo: " .. opt[1], Duration=3})
+    end
+})
+
+LimbsTab:CreateButton({
+    Name = "Actualizar Lista (Clic tras reaparecer)",
+    Callback = function()
+        refreshLimbsDropdown()
+        Rayfield:Notify({Title="Actualizado", Content="Lista de extremidades actualizada", Duration=2})
+    end
+})
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    char:WaitForChild("HumanoidRootPart", 5)
+    refreshLimbsDropdown()
+end)
+
+if LocalPlayer.Character then
+    refreshLimbsDropdown()
+end
+
+LimbsTab:CreateToggle({Name = "Verificar Equipo", CurrentValue = le:Get("TEAM_CHECK"), Callback = function(v) le:Set("TEAM_CHECK", v) end})
+LimbsTab:CreateToggle({Name = "Verificar ForceField", CurrentValue = le:Get("FORCEFIELD_CHECK"), Callback = function(v) le:Set("FORCEFIELD_CHECK", v) end})
+LimbsTab:CreateToggle({Name = "Colisión de Extremidades", CurrentValue = le:Get("LIMB_CAN_COLLIDE"), Callback = function(v) le:Set("LIMB_CAN_COLLIDE", v) end})
+LimbsTab:CreateSlider({Name = "Transparencia", Range = {0,1}, Increment = 0.1, CurrentValue = le:Get("LIMB_TRANSPARENCY"), Callback = function(v) le:Set("LIMB_TRANSPARENCY", v) end})
+LimbsTab:CreateSlider({Name = "Multiplicador de Tamaño", Range = {5,50}, Increment = 0.5, CurrentValue = le:Get("LIMB_SIZE"), Callback = function(v) le:Set("LIMB_SIZE", v) end})
+LimbsTab:CreateKeybind({
+    Name = "Tecla de Activación",
+    CurrentKeybind = le:Get("TOGGLE") or "RightShift",
+    HoldToInteract = false,
+    Callback = function()
+        ModifyLimbsToggle:Set(not le._running)
+    end
+})
+
+-- SENSE ESP
+
+local Sense = loadstring(game:HttpGet('https://sirius.menu/sense'))()
+Sense.teamSettings.enemy.enabled = true
+Sense.teamSettings.friendly.enabled = true
+
+ESPTab:CreateSection("Controles ESP")
+ESPTab:CreateToggle({Name = "ESP Activado", CurrentValue = true, Callback = function(v) Sense.teamSettings.enemy.enabled = v Sense.teamSettings.friendly.enabled = v end})
+ESPTab:CreateColorPicker({Name = "Color Enemigo", Color = Color3.fromRGB(255,0,0), Callback = function(c) Sense.teamSettings.enemy.boxColor = c Sense.teamSettings.enemy.tracerColor = c end})
+ESPTab:CreateColorPicker({Name = "Color Equipo", Color = Color3.fromRGB(0,255,0), Callback = function(c) Sense.teamSettings.friendly.boxColor = c Sense.teamSettings.friendly.tracerColor = c end})
+ESPTab:CreateToggle({Name = "Cajas", CurrentValue = true, Callback = function(v) Sense.teamSettings.enemy.box = v Sense.teamSettings.friendly.box = v end})
+ESPTab:CreateToggle({Name = "Trazadores", CurrentValue = true, Callback = function(v) Sense.teamSettings.enemy.tracer = v Sense.teamSettings.friendly.tracer = v end})
+ESPTab:CreateToggle({Name = "Nombres", CurrentValue = true, Callback = function(v) Sense.teamSettings.enemy.name = v Sense.teamSettings.friendly.name = v end})
+Sense.Load()
+
+-- VISUAL & EMOTE
+
+VisualTab:CreateSection("Aumentador de FPS")
+VisualTab:CreateButton({Name = "Cargar FPS Booster", Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Sawit-FPS-Booster-102033"))() Rayfield:Notify({Title="FPS",Content="Cargado",Duration=3}) end})
+
+EmoteTab:CreateButton({Name = "Cargar Todos los Emotes", Callback = function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-7yd7-I-Emote-Script-48024"))() Rayfield:Notify({Title="Emotes",Content="Cargado",Duration=3}) end})
+
+-- NOTIFICACIÓN FINAL
+
+Rayfield:Notify({
+   Title = "ARSX X RAYFIELD CARGADO",
+   Content = "Todas las funciones unidas y listas\nSelecciona extremidades en la pestaña Extremidades\nLista auto-actualizable con botón manual\nListo para usar",
+   Duration = 8
+})
+
+print("[ARSX X RAYFIELD] Completo - Selector de Extremidades Listo")
