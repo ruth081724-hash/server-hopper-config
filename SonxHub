@@ -1,0 +1,355 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+workspace.FallenPartsDestroyHeight = -math.huge
+
+-- Create Main GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SONXHUB"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Main Frame (Smaller for mobile)
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 280, 0, 400)
+MainFrame.Position = UDim2.new(1, -300, 0, 50)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+MainFrame.ClipsDescendants = true
+
+-- Add Corner Radius
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 12)
+Corner.Parent = MainFrame
+
+-- Header Frame (Compact)
+local HeaderFrame = Instance.new("Frame")
+HeaderFrame.Name = "HeaderFrame"
+HeaderFrame.Size = UDim2.new(1, 0, 0, 45)
+HeaderFrame.BackgroundColor3 = Color3.fromRGB(255, 100, 50)
+HeaderFrame.BorderSizePixel = 0
+HeaderFrame.Parent = MainFrame
+
+local HeaderCorner = Instance.new("UICorner")
+HeaderCorner.CornerRadius = UDim.new(0, 12)
+HeaderCorner.Parent = HeaderFrame
+
+-- S Logo Button
+local LogoButton = Instance.new("TextButton")
+LogoButton.Name = "LogoButton"
+LogoButton.Size = UDim2.new(0, 35, 0, 35)
+LogoButton.Position = UDim2.new(0, 5, 0, 5)
+LogoButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+LogoButton.TextColor3 = Color3.fromRGB(255, 100, 50)
+LogoButton.TextSize = 18
+LogoButton.Font = Enum.Font.GothamBold
+LogoButton.Text = "S"
+LogoButton.BorderSizePixel = 0
+LogoButton.Parent = HeaderFrame
+
+local LogoCorner = Instance.new("UICorner")
+LogoCorner.CornerRadius = UDim.new(0, 8)
+LogoCorner.Parent = LogoButton
+
+-- Title Label (Compact)
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, -85, 0, 45)
+TitleLabel.Position = UDim2.new(0, 45, 0, 0)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 16
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "SONXHUB"
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = HeaderFrame
+
+-- Minimize Button
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+MinimizeButton.Position = UDim2.new(1, -70, 0, 7.5)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 150, 100)
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 16
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Text = "-"
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Parent = HeaderFrame
+
+local MinimizeCorner = Instance.new("UICorner")
+MinimizeCorner.CornerRadius = UDim.new(0, 6)
+MinimizeCorner.Parent = MinimizeButton
+
+-- Close Button
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -35, 0, 7.5)
+CloseButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.TextSize = 16
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Text = "X"
+CloseButton.BorderSizePixel = 0
+CloseButton.Parent = HeaderFrame
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseButton
+
+-- Content Frame with ScrollingFrame
+local ContentFrame = Instance.new("ScrollingFrame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, 0, 1, -45)
+ContentFrame.Position = UDim2.new(0, 0, 0, 45)
+ContentFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+ContentFrame.BorderSizePixel = 0
+ContentFrame.ScrollBarThickness = 4
+ContentFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 100, 50)
+ContentFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ContentFrame.Parent = MainFrame
+
+-- UIListLayout for content
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Padding = UDim.new(0, 6)
+ListLayout.Parent = ContentFrame
+
+-- UIPadding for content
+local ContentPadding = Instance.new("UIPadding")
+ContentPadding.PaddingLeft = UDim.new(0, 8)
+ContentPadding.PaddingRight = UDim.new(0, 8)
+ContentPadding.PaddingTop = UDim.new(0, 8)
+ContentPadding.PaddingBottom = UDim.new(0, 8)
+ContentPadding.Parent = ContentFrame
+
+-- Function to create section title
+local function CreateSectionTitle(text)
+    local Section = Instance.new("TextLabel")
+    Section.Name = "Section"
+    Section.Size = UDim2.new(1, 0, 0, 22)
+    Section.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Section.TextColor3 = Color3.fromRGB(255, 100, 50)
+    Section.TextSize = 11
+    Section.Font = Enum.Font.GothamBold
+    Section.Text = text
+    Section.TextXAlignment = Enum.TextXAlignment.Left
+    Section.BorderSizePixel = 0
+    Section.Parent = ContentFrame
+    
+    local SectionCorner = Instance.new("UICorner")
+    SectionCorner.CornerRadius = UDim.new(0, 5)
+    SectionCorner.Parent = Section
+end
+
+-- Function to create button (Compact)
+local function CreateButton(text, callback)
+    local ButtonFrame = Instance.new("Frame")
+    ButtonFrame.Name = "ButtonFrame"
+    ButtonFrame.Size = UDim2.new(1, 0, 0, 32)
+    ButtonFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    ButtonFrame.BorderSizePixel = 0
+    ButtonFrame.Parent = ContentFrame
+    
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 6)
+    ButtonCorner.Parent = ButtonFrame
+    
+    local Button = Instance.new("TextButton")
+    Button.Name = "Button"
+    Button.Size = UDim2.new(1, 0, 1, 0)
+    Button.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Button.TextSize = 11
+    Button.Font = Enum.Font.GothamSemibold
+    Button.Text = text
+    Button.BorderSizePixel = 0
+    Button.Parent = ButtonFrame
+    
+    local ButtonCorner2 = Instance.new("UICorner")
+    ButtonCorner2.CornerRadius = UDim.new(0, 6)
+    ButtonCorner2.Parent = Button
+    
+    Button.MouseEnter:Connect(function()
+        Button.BackgroundColor3 = Color3.fromRGB(255, 100, 50)
+    end)
+    
+    Button.MouseLeave:Connect(function()
+        Button.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    end)
+    
+    Button.MouseButton1Click:Connect(function()
+        pcall(callback)
+    end)
+end
+
+-- Add Troll Scripts Section
+CreateSectionTitle("Troll Scripts")
+CreateButton("Black Hole", function()
+    local Workspace = game:GetService("Workspace")
+    local humanoidRootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+    
+    local Folder = Instance.new("Folder", Workspace)
+    local Part = Instance.new("Part", Folder)
+    local Attachment1 = Instance.new("Attachment", Part)
+    Part.Anchored = true
+    Part.CanCollide = false
+    Part.Transparency = 1
+
+    if not getgenv().Network then
+        getgenv().Network = {
+            BaseParts = {},
+            Velocity = Vector3.new(14.46262424, 14.46262424, 14.46262424)
+        }
+
+        Network.RetainPart = function(part)
+            if typeof(part) == "Instance" and part:IsA("BasePart") and part:IsDescendantOf(Workspace) then
+                table.insert(Network.BaseParts, part)
+                part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
+                part.CanCollide = false
+            end
+        end
+
+        LocalPlayer.ReplicationFocus = Workspace
+        RunService.Heartbeat:Connect(function()
+            sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
+            for _, part in pairs(Network.BaseParts) do
+                if part:IsDescendantOf(Workspace) then
+                    part.Velocity = Network.Velocity
+                end
+            end
+        end)
+    end
+
+    local function ForcePart(v)
+        if v:IsA("Part") and not v.Anchored and not v.Parent:FindFirstChild("Humanoid") and not v.Parent:FindFirstChild("Head") and v.Name ~= "Handle" then
+            for _, x in next, v:GetChildren() do
+                if x:IsA("BodyAngularVelocity") or x:IsA("BodyForce") or x:IsA("BodyGyro") or x:IsA("BodyPosition") or x:IsA("BodyThrust") or x:IsA("BodyVelocity") or x:IsA("RocketPropulsion") then
+                    x:Destroy()
+                end
+            end
+            if v:FindFirstChild("Attachment") then
+                v:FindFirstChild("Attachment"):Destroy()
+            end
+            if v:FindFirstChild("AlignPosition") then
+                v:FindFirstChild("AlignPosition"):Destroy()
+            end
+            if v:FindFirstChild("Torque") then
+                v:FindFirstChild("Torque"):Destroy()
+            end
+            v.CanCollide = false
+            
+            local Torque = Instance.new("Torque", v)
+            Torque.Torque = Vector3.new(1000000, 1000000, 1000000)
+            local AlignPosition = Instance.new("AlignPosition", v)
+            local Attachment2 = Instance.new("Attachment", v)
+            Torque.Attachment0 = Attachment2
+            AlignPosition.MaxForce = math.huge
+            AlignPosition.MaxVelocity = math.huge
+            AlignPosition.Responsiveness = 500
+            AlignPosition.Attachment0 = Attachment2
+            AlignPosition.Attachment1 = Attachment1
+        end
+    end
+
+    for _, v in pairs(Workspace:GetDescendants()) do
+        ForcePart(v)
+    end
+    Workspace.DescendantAdded:Connect(function(v)
+        ForcePart(v)
+    end)
+end)
+
+-- Add Universal Scripts Section
+CreateSectionTitle("Universal Scripts")
+
+CreateButton("Rael Hub", function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/The-Mimic-Rael-Hub-20921"))()
+end)
+
+CreateButton("ShiftLock", function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/N2tiHgyv"))()
+end)
+
+CreateButton("Ghost Hub", function()
+    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-GhostHub-16534"))()
+end)
+
+CreateButton("InfiniteYield", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+CreateButton("TP Tool", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/err0r129/KptHadesBlair/main/Bao.lua"))()
+end)
+
+CreateButton("Fly Gui", function()
+    loadstring(game:HttpGet("https://scriptblox.com/raw/Universal-Script-Fly-v3-7412"))()
+end)
+
+CreateButton("Nameless Admin", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))()
+end)
+
+CreateButton("Telekinesis", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/SAZXHUB/Control-update/main/README.md", true))()
+end)
+
+-- Rejoin Button
+CreateSectionTitle("Options")
+CreateButton("Rejoin Server", function()
+    local TeleportService = game:GetService("TeleportService")
+    TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+end)
+
+-- Minimize Function
+local minimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        MainFrame:TweenSize(UDim2.new(0, 50, 0, 45), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.3, true)
+        MinimizeButton.Text = "+"
+    else
+        MainFrame:TweenSize(UDim2.new(0, 280, 0, 400), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+        MinimizeButton.Text = "-"
+    end
+end)
+
+-- Close Button Function
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Draggable functionality (Improved)
+local dragging = false
+local dragStart = nil
+local frameStart = nil
+
+HeaderFrame.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = Mouse.Position
+        frameStart = MainFrame.Position
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input, gameProcessed)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+Mouse.Move:Connect(function()
+    if dragging and dragStart and frameStart then
+        local delta = Mouse.Position - dragStart
+        MainFrame.Position = frameStart + UDim2.new(0, delta.X, 0, delta.Y)
+    end
+end)
+
+print("SONXHUB Mobile v2 loaded successfully!")
